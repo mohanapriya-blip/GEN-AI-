@@ -1,0 +1,921 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "gpuType": "T4",
+      "authorship_tag": "ABX9TyNUBwBHRmjMw0pbPgOrY8f5",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/mohanapriya-blip/GEN-AI-/blob/main/Skill%20WEEK%202\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "fhWbVoAuMboX",
+        "outputId": "d5930043-e338-4ddb-ed85-44e89e48b607"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/content/week-2\n",
+            "/content/week-2\n"
+          ]
+        }
+      ],
+      "source": [
+        "!mkdir -p week-2\n",
+        "%cd week-2\n",
+        "!pwd"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!apt-get -qq install -y zstd\n",
+        "!curl -fsSL https://ollama.com/install.sh | sh"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "QFIgVUEVYXAC",
+        "outputId": "c8ebb392-0721-41b9-f8fc-578a07b4bb9f"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Selecting previously unselected package zstd.\n",
+            "(Reading database ... 127324 files and directories currently installed.)\n",
+            "Preparing to unpack .../zstd_1.5.5+dfsg2-2build1.1_amd64.deb ...\n",
+            "Unpacking zstd (1.5.5+dfsg2-2build1.1) ...\n",
+            "Setting up zstd (1.5.5+dfsg2-2build1.1) ...\n",
+            "Processing triggers for man-db (2.12.0-4build2) ...\n",
+            ">>> Installing ollama to /usr/local\n",
+            ">>> Downloading ollama-linux-amd64.tar.zst\n",
+            "######################################################################## 100.0%\n",
+            ">>> Creating ollama user...\n",
+            ">>> Adding ollama user to video group...\n",
+            ">>> Adding current user to ollama group...\n",
+            ">>> Creating ollama systemd service...\n",
+            "\u001b[1m\u001b[31mWARNING:\u001b[m systemd is not running\n",
+            "\u001b[1m\u001b[31mWARNING:\u001b[m Unable to detect NVIDIA/AMD GPU. Install lspci or lshw to automatically detect and install GPU dependencies.\n",
+            ">>> The Ollama API is now available at 127.0.0.1:11434.\n",
+            ">>> Install complete. Run \"ollama\" from the command line.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ollama --version"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "HShdFE86YYkG",
+        "outputId": "13ea58bd-49c8-4b25-b796-9a2898278bf4"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Warning: could not connect to a running Ollama instance\n",
+            "Warning: client version is 0.40.16\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import subprocess\n",
+        "import time\n",
+        "import requests\n",
+        "\n",
+        "ollama_proc = subprocess.Popen(\n",
+        "    [\"ollama\", \"serve\"],\n",
+        "    stdout=subprocess.DEVNULL,\n",
+        "    stderr=subprocess.DEVNULL\n",
+        ")\n",
+        "\n",
+        "for _ in range(30):\n",
+        "    try:\n",
+        "        r = requests.get(\"http://localhost:11434\")\n",
+        "        if r.ok:\n",
+        "            print(\"Server says:\", r.text)\n",
+        "            break\n",
+        "    except requests.exceptions.ConnectionError:\n",
+        "        time.sleep(1)\n",
+        "else:\n",
+        "    print(\"Server did not start. Re-run this cell.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4kynOJPyYZ5j",
+        "outputId": "43437508-aeee-4651-c01c-2bdd56701b9e"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Server says: Ollama is running\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ollama pull llama3.2"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7ytXjdsrYkbO",
+        "outputId": "0424c76d-e664-4aca-e9c9-76471d5091e6"
+      },
+      "execution_count": 14,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[?2026h\u001b[?25l\u001b[1G\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[1G\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[1G\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[1G\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[1G\u001b[?25h\u001b[?2026l\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ollama list"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "VJ0KFmVgYmvC",
+        "outputId": "fddb1438-5e6e-4a81-a4bb-c75d8c501d92"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "NAME               ID              SIZE      MODIFIED      \n",
+            "llama3.2:latest    a80c4f17acd5    2.0 GB    9 seconds ago    \n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!curl -s http://localhost:11434/api/generate -d '{\"model\": \"llama3.2\", \"prompt\": \"Say hello in one short sentence.\", \"stream\": false}'"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "dKqpD4jUZB23",
+        "outputId": "14dfdc13-2e7a-41d2-92d5-154bda8fe8b2"
+      },
+      "execution_count": 16,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "{\"model\":\"llama3.2\",\"created_at\":\"2026-11-16T08:08:16.221698796Z\",\"response\":\"Hello!\",\"done\":true,\"done_reason\":\"stop\",\"context\":[128006,9125,128007,271,38766,1303,33025,2696,25,6790,220,2366,18,271,128009,128006,882,128007,271,46864,24748,304,832,2875,11914,13,128009,128006,78191,128007,271,9906,0],\"total_duration\":61596024819,\"load_duration\":7140523232,\"prompt_eval_count\":32,\"prompt_eval_cached_count\":0,\"prompt_eval_duration\":54412502000,\"eval_count\":3,\"eval_duration\":39732000}"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import userdata\n",
+        "\n",
+        "key = userdata.get(\"GEMINI_API_KEY\")\n",
+        "\n",
+        "with open(\".env\", \"w\") as f:\n",
+        "    f.write(f'GEMINI_API_KEY=\"{key}\"\\n')\n",
+        "\n",
+        "print(\".env created. Key length:\", len(key))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "5dhqdiP_ZyLp",
+        "outputId": "44570e28-c8c4-459d-da10-96e8d1f3003d"
+      },
+      "execution_count": 19,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            ".env created. Key length: 53\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ls -a"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "1_i5gstZbsx0",
+        "outputId": "a08655ad-a219-4875-9bb8-8aca53ce796c"
+      },
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            ".  ..  .env\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile requirements.txt\n",
+        "python-dotenv\n",
+        "pytest\n",
+        "google-genai\n",
+        "requests"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "J2kFu0zMbu_e",
+        "outputId": "a6b741d8-0aad-4151-c14f-b7360a1c93e5"
+      },
+      "execution_count": 21,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Writing requirements.txt\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install -q -r requirements.txt"
+      ],
+      "metadata": {
+        "id": "NfYwiDH9bwS2"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google import genai\n",
+        "print(\"google-genai imported OK\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "qrcmjm3-byQT",
+        "outputId": "19d4188f-ec03-4d93-ee8a-9487e27e6528"
+      },
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "google-genai imported OK\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "%%writefile llm_client.py\n",
+        "\n",
+        "from abc import ABC, abstractmethod\n",
+        "from google import genai\n",
+        "import requests\n",
+        "\n",
+        "\n",
+        "# Common interface\n",
+        "class LLMProvider(ABC):\n",
+        "\n",
+        "    @abstractmethod\n",
+        "    def generate(self, prompt):\n",
+        "        pass\n",
+        "\n",
+        "\n",
+        "# Gemini cloud provider\n",
+        "class GeminiProvider(LLMProvider):\n",
+        "\n",
+        "    def __init__(self, api_key, model=\"gemini-3.8-flash\"):\n",
+        "        self.client = genai.Client(api_key=api_key)\n",
+        "        self.model = model\n",
+        "\n",
+        "    def generate(self, prompt):\n",
+        "        response = self.client.models.generate_content(\n",
+        "            model=self.model,\n",
+        "            contents=prompt\n",
+        "        )\n",
+        "        return response.text\n",
+        "\n",
+        "\n",
+        "# Ollama local provider\n",
+        "class OllamaProvider(LLMProvider):\n",
+        "\n",
+        "    def __init__(self, model=\"llama3.2\"):\n",
+        "        self.model = model\n",
+        "        self.url = \"http://localhost:11434/api/generate\"\n",
+        "\n",
+        "    def generate(self, prompt):\n",
+        "        response = requests.post(\n",
+        "            self.url,\n",
+        "            json={\n",
+        "                \"model\": self.model,\n",
+        "                \"prompt\": prompt,\n",
+        "                \"stream\": False\n",
+        "            },\n",
+        "            timeout=120\n",
+        "        )\n",
+        "        response.raise_for_status()\n",
+        "        return response.json()[\"response\"]\n",
+        "\n",
+        "\n",
+        "# Common client\n",
+        "class LLMClient:\n",
+        "\n",
+        "    def __init__(self, provider):\n",
+        "        self.provider = provider\n",
+        "\n",
+        "    def generate(self, prompt):\n",
+        "        return self.provider.generate(prompt)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "RJUNQ4c-b0yf",
+        "outputId": "047705b6-abae-4c18-ba82-dfbff02eec17"
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Writing llm_client.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "%%writefile main.py\n",
+        "\n",
+        "import os\n",
+        "from dotenv import load_dotenv\n",
+        "from llm_client import (\n",
+        "    GeminiProvider,\n",
+        "    OllamaProvider,\n",
+        "    LLMClient\n",
+        ")\n",
+        "\n",
+        "load_dotenv(override=True)\n",
+        "\n",
+        "provider_name = input(\n",
+        "    \"Choose provider (gemini/ollama): \"\n",
+        ").strip().lower()\n",
+        "\n",
+        "if provider_name == \"gemini\":\n",
+        "    api_key = os.getenv(\"GEMINI_API_KEY\")\n",
+        "\n",
+        "    if not api_key:\n",
+        "        raise ValueError(\"Gemini API key not found in .env\")\n",
+        "\n",
+        "    provider = GeminiProvider(api_key)\n",
+        "\n",
+        "elif provider_name == \"ollama\":\n",
+        "    provider = OllamaProvider(\"llama3.2\")\n",
+        "\n",
+        "else:\n",
+        "    raise ValueError(\"Invalid provider selected\")\n",
+        "\n",
+        "client = LLMClient(provider)\n",
+        "\n",
+        "prompt = input(\"Enter your question: \")\n",
+        "answer = client.generate(prompt)\n",
+        "\n",
+        "print(\"\\nLLM Response:\")\n",
+        "print(answer)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "UIPdLs0pb233",
+        "outputId": "969b3649-fb72-43c2-808a-72cb828c8461"
+      },
+      "execution_count": 25,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Writing main.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "%%writefile test_client.py\n",
+        "\n",
+        "import unittest\n",
+        "from llm_client import LLMClient\n",
+        "\n",
+        "\n",
+        "# Fake provider for testing\n",
+        "class FakeProvider:\n",
+        "\n",
+        "    def generate(self, prompt):\n",
+        "        return \"AI stands for Artificial Intelligence.\"\n",
+        "\n",
+        "\n",
+        "class TestLLMClient(unittest.TestCase):\n",
+        "\n",
+        "    def test_generate(self):\n",
+        "        provider = FakeProvider()\n",
+        "        client = LLMClient(provider)\n",
+        "\n",
+        "        result = client.generate(\"Explain AI\")\n",
+        "\n",
+        "        self.assertEqual(\n",
+        "            result,\n",
+        "            \"AI stands for Artificial Intelligence.\"\n",
+        "        )\n",
+        "\n",
+        "\n",
+        "if __name__ == \"__main__\":\n",
+        "    unittest.main()\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "SXgD7X3Ab5Zm",
+        "outputId": "f8644cd4-e94a-4bde-f5da-14b088976b71"
+      },
+      "execution_count": 26,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Writing test_client.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!python -m pytest test_client.py -v"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "bXJdVuCab8p8",
+        "outputId": "1b573617-01e2-4da9-aba0-fa87f245e71b"
+      },
+      "execution_count": 27,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[1m============================= test session starts ==============================\u001b[0m\n",
+            "platform linux -- Python 3.13.16, pytest-8.4.2, pluggy-1.7.0 -- /usr/bin/python3\n",
+            "cachedir: .pytest_cache\n",
+            "rootdir: /content/week-2\n",
+            "plugins: anyio-4.16.0, platformdirs-4.14.3, langsmith-0.14.17, typeguard-4.6.0\n",
+            "collected 1 item                                                               \u001b[0m\n",
+            "\n",
+            "test_client.py::TestLLMClient::test_generate \u001b[32mPASSED\u001b[0m\u001b[32m                      [100%]\u001b[0m\n",
+            "\n",
+            "\u001b[32m============================== \u001b[32m\u001b[1m1 passed\u001b[0m\u001b[32m in 1.26s\u001b[0m\u001b[32m ===============================\u001b[0m\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%run main.py"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "NLcMPA38b7MC",
+        "outputId": "866958fa-c869-4446-e43e-5f5b5bb15e99"
+      },
+      "execution_count": 28,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Choose provider (gemini/ollama): Ollama\n",
+            "Enter your question: Explain AI in two sentences.\n",
+            "\n",
+            "LLM Response:\n",
+            "Artificial intelligence (AI) refers to the development of computer systems that can perform tasks that typically require human intelligence, such as learning, problem-solving, and decision-making. AI systems use algorithms and data to simulate human-like intelligence, enabling them to analyze, recognize, and respond to complex patterns and tasks, often with the goal of improving efficiency, accuracy, and decision-making in various industries and applications.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ls -la"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ZVs-SKtrcAKC",
+        "outputId": "caf793a7-b494-431c-896b-297ddfd8b4d1"
+      },
+      "execution_count": 29,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "total 36\n",
+            "drwxr-xr-x 4 root root 4096 Nov 16 08:18 .\n",
+            "drwxr-xr-x 1 root root 4096 Nov 16 08:02 ..\n",
+            "-rw-r--r-- 1 root root   71 Nov 16 08:17 .env\n",
+            "-rw-r--r-- 1 root root 1284 Nov 16 08:18 llm_client.py\n",
+            "-rw-r--r-- 1 root root  704 Nov 16 08:18 main.py\n",
+            "drwxr-xr-x 2 root root 4096 Nov 16 08:18 __pycache__\n",
+            "drwxr-xr-x 3 root root 4096 Nov 16 08:18 .pytest_cache\n",
+            "-rw-r--r-- 1 root root   43 Nov 16 08:17 requirements.txt\n",
+            "-rw-r--r-- 1 root root  539 Nov 16 08:18 test_client.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import files\n",
+        "\n",
+        "files.download(\"llm_client.py\")\n",
+        "files.download(\"main.py\")\n",
+        "files.download(\"test_client.py\")\n",
+        "files.download(\"requirements.txt\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 17
+        },
+        "id": "ZIYe0MkncHZh",
+        "outputId": "d7012d14-73e2-4206-b1dc-bfa68fb73bb7"
+      },
+      "execution_count": 32,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "\n",
+              "    async function download(id, filename, size) {\n",
+              "      if (!google.colab.kernel.accessAllowed) {\n",
+              "        return;\n",
+              "      }\n",
+              "      const div = document.createElement('div');\n",
+              "      const label = document.createElement('label');\n",
+              "      label.textContent = `Downloading \"${filename}\": `;\n",
+              "      div.appendChild(label);\n",
+              "      const progress = document.createElement('progress');\n",
+              "      progress.max = size;\n",
+              "      div.appendChild(progress);\n",
+              "      document.body.appendChild(div);\n",
+              "\n",
+              "      const buffers = [];\n",
+              "      let downloaded = 0;\n",
+              "\n",
+              "      const channel = await google.colab.kernel.comms.open(id);\n",
+              "      // Send a message to notify the kernel that we're ready.\n",
+              "      channel.send({})\n",
+              "\n",
+              "      for await (const message of channel.messages) {\n",
+              "        // Send a message to notify the kernel that we're ready.\n",
+              "        channel.send({})\n",
+              "        if (message.buffers) {\n",
+              "          for (const buffer of message.buffers) {\n",
+              "            buffers.push(buffer);\n",
+              "            downloaded += buffer.byteLength;\n",
+              "            progress.value = downloaded;\n",
+              "          }\n",
+              "        }\n",
+              "      }\n",
+              "      const blob = new Blob(buffers, {type: 'application/binary'});\n",
+              "      const a = document.createElement('a');\n",
+              "      a.href = window.URL.createObjectURL(blob);\n",
+              "      a.download = filename;\n",
+              "      div.appendChild(a);\n",
+              "      a.click();\n",
+              "      div.remove();\n",
+              "    }\n",
+              "  "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "download(\"download_35936362-7b16-496c-8f55-5ff80e644716\", \"llm_client.py\", 1284)"
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "\n",
+              "    async function download(id, filename, size) {\n",
+              "      if (!google.colab.kernel.accessAllowed) {\n",
+              "        return;\n",
+              "      }\n",
+              "      const div = document.createElement('div');\n",
+              "      const label = document.createElement('label');\n",
+              "      label.textContent = `Downloading \"${filename}\": `;\n",
+              "      div.appendChild(label);\n",
+              "      const progress = document.createElement('progress');\n",
+              "      progress.max = size;\n",
+              "      div.appendChild(progress);\n",
+              "      document.body.appendChild(div);\n",
+              "\n",
+              "      const buffers = [];\n",
+              "      let downloaded = 0;\n",
+              "\n",
+              "      const channel = await google.colab.kernel.comms.open(id);\n",
+              "      // Send a message to notify the kernel that we're ready.\n",
+              "      channel.send({})\n",
+              "\n",
+              "      for await (const message of channel.messages) {\n",
+              "        // Send a message to notify the kernel that we're ready.\n",
+              "        channel.send({})\n",
+              "        if (message.buffers) {\n",
+              "          for (const buffer of message.buffers) {\n",
+              "            buffers.push(buffer);\n",
+              "            downloaded += buffer.byteLength;\n",
+              "            progress.value = downloaded;\n",
+              "          }\n",
+              "        }\n",
+              "      }\n",
+              "      const blob = new Blob(buffers, {type: 'application/binary'});\n",
+              "      const a = document.createElement('a');\n",
+              "      a.href = window.URL.createObjectURL(blob);\n",
+              "      a.download = filename;\n",
+              "      div.appendChild(a);\n",
+              "      a.click();\n",
+              "      div.remove();\n",
+              "    }\n",
+              "  "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "download(\"download_ac81e53f-3e47-4a64-b90e-3ef0cbd786fb\", \"main.py\", 704)"
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "\n",
+              "    async function download(id, filename, size) {\n",
+              "      if (!google.colab.kernel.accessAllowed) {\n",
+              "        return;\n",
+              "      }\n",
+              "      const div = document.createElement('div');\n",
+              "      const label = document.createElement('label');\n",
+              "      label.textContent = `Downloading \"${filename}\": `;\n",
+              "      div.appendChild(label);\n",
+              "      const progress = document.createElement('progress');\n",
+              "      progress.max = size;\n",
+              "      div.appendChild(progress);\n",
+              "      document.body.appendChild(div);\n",
+              "\n",
+              "      const buffers = [];\n",
+              "      let downloaded = 0;\n",
+              "\n",
+              "      const channel = await google.colab.kernel.comms.open(id);\n",
+              "      // Send a message to notify the kernel that we're ready.\n",
+              "      channel.send({})\n",
+              "\n",
+              "      for await (const message of channel.messages) {\n",
+              "        // Send a message to notify the kernel that we're ready.\n",
+              "        channel.send({})\n",
+              "        if (message.buffers) {\n",
+              "          for (const buffer of message.buffers) {\n",
+              "            buffers.push(buffer);\n",
+              "            downloaded += buffer.byteLength;\n",
+              "            progress.value = downloaded;\n",
+              "          }\n",
+              "        }\n",
+              "      }\n",
+              "      const blob = new Blob(buffers, {type: 'application/binary'});\n",
+              "      const a = document.createElement('a');\n",
+              "      a.href = window.URL.createObjectURL(blob);\n",
+              "      a.download = filename;\n",
+              "      div.appendChild(a);\n",
+              "      a.click();\n",
+              "      div.remove();\n",
+              "    }\n",
+              "  "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "download(\"download_d18e87ca-1bb8-4e16-a2d3-b1116013a4f4\", \"test_client.py\", 539)"
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "\n",
+              "    async function download(id, filename, size) {\n",
+              "      if (!google.colab.kernel.accessAllowed) {\n",
+              "        return;\n",
+              "      }\n",
+              "      const div = document.createElement('div');\n",
+              "      const label = document.createElement('label');\n",
+              "      label.textContent = `Downloading \"${filename}\": `;\n",
+              "      div.appendChild(label);\n",
+              "      const progress = document.createElement('progress');\n",
+              "      progress.max = size;\n",
+              "      div.appendChild(progress);\n",
+              "      document.body.appendChild(div);\n",
+              "\n",
+              "      const buffers = [];\n",
+              "      let downloaded = 0;\n",
+              "\n",
+              "      const channel = await google.colab.kernel.comms.open(id);\n",
+              "      // Send a message to notify the kernel that we're ready.\n",
+              "      channel.send({})\n",
+              "\n",
+              "      for await (const message of channel.messages) {\n",
+              "        // Send a message to notify the kernel that we're ready.\n",
+              "        channel.send({})\n",
+              "        if (message.buffers) {\n",
+              "          for (const buffer of message.buffers) {\n",
+              "            buffers.push(buffer);\n",
+              "            downloaded += buffer.byteLength;\n",
+              "            progress.value = downloaded;\n",
+              "          }\n",
+              "        }\n",
+              "      }\n",
+              "      const blob = new Blob(buffers, {type: 'application/binary'});\n",
+              "      const a = document.createElement('a');\n",
+              "      a.href = window.URL.createObjectURL(blob);\n",
+              "      a.download = filename;\n",
+              "      div.appendChild(a);\n",
+              "      a.click();\n",
+              "      div.remove();\n",
+              "    }\n",
+              "  "
+            ]
+          },
+          "metadata": {}
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<IPython.core.display.Javascript object>"
+            ],
+            "application/javascript": [
+              "download(\"download_b42b1811-9013-40dd-ba59-01259cd5409a\", \"requirements.txt\", 43)"
+            ]
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "ov-yzWdNc-Al"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
